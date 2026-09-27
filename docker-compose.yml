@@ -1,0 +1,38 @@
+services:
+  llm:
+    build:
+      args: 
+        - LLAMA_URL=https://github.com/PrismML-Eng/llama.cpp/releases/download/prism-b10743-adfffbe/llama-prism-b10743-adfffbe-bin-linux-cuda-13.3-x64.tar.gz
+      context: .
+      dockerfile: ./service/Dockerfile
+    container_name: prism-ml01
+    command: [
+      "llama-server", 
+      "-m","/prism-ml/models/Ternary-Bonsai-2-27B-PQ2_0.gguf", 
+      "--mmproj","/prism-ml/models/Ternary-Bonsai-2-27B-mmproj-BF16.gguf" ,
+      "-c","65536", 
+      "-ngl","99",
+      "--jinja",
+      "--reasoning-preserve",
+      "--image-min-tokens","1024",
+      "--reasoning-budget","2000",
+      "--port","11434",
+      "--host", "0.0.0.0"
+    ] 
+    environment:
+      CLI_ARGS: ''
+    ports:
+      - '11434:11434/tcp'
+    volumes:
+      - ./volumes/prism-ml/models:/prism-ml/models
+    logging:
+      options:
+        max-size: '200k'
+        max-file: '10'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
